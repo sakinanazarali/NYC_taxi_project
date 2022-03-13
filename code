@@ -1,13 +1,13 @@
 jan_to_march_2019 <- read.csv("/Users/SakinaMNazarali/Downloads/2019_Yellow_Taxi_Trip_Data_Jan_to_March.csv")
 jan_to_march_2020 <- read.csv("/Users/SakinaMNazarali/Downloads/2020_Yellow_Taxi_Trip_Data_Jan_to_March.csv")
-nrow(jan_to_march_2019)
-nrow(jan_to_march_2020)
+nrow(jan_to_march_2019) # 22296496
+nrow(jan_to_march_2020) # 15702064
 set.seed(12345)
 install.packages("dplyr")
 library(dplyr)
 sample_jtm_2019 <- sample_n(jan_to_march_2019,4000000)
-nrow(sample_jtm_2019)
+nrow(sample_jtm_2019) #4000000
 sample_jtm_2020 <- sample_n(jan_to_march_2020,4000000)
-nrow(sample_jtm_2020)
+nrow(sample_jtm_2020) #4000000
 write.csv(sample_jtm_2019,"sampled_january_to_march_2019.csv")
 write.csv(sample_jtm_2020,"sampled_january_to_march_2020.csv")
