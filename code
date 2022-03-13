@@ -17,12 +17,11 @@ write.csv(sample_jtm_2019,"sampled_january_to_march_2019.csv")
 write.csv(sample_jtm_2020,"sampled_january_to_march_2020.csv")
 head(sample_jtm_2019)
 head(sample_jtm_2020)
-# Check how R is reading the dates
-# Change time from AM to PM 
-# Check num of records for each month to see for random sampling
-str(sample_jtm_2019)
+str(sample_jtm_2019$tpep_pickup_datetime)
+# Factor w/ 6478822 levels 
 
-# The dates are currently in factors format + AM/PM. In order to be able to perform an analysis on them, they need to be changed to POSIXct and military time
+# The dates are currently in factors format + AM/PM. In order to be able to perform an analysis on them, 
+# they need to be changed to POSIXct and military time
 install.packages("lubridate")
 install.packages("tidyverse")
 library(lubridate)
@@ -35,3 +34,21 @@ head(formatted_dates_model)
 head(sample_jtm_2019$tpep_pickup_datetime)
 # [1] 03/17/2019 07:43:21 AM 01/28/2019 06:12:42 PM 03/30/2019 03:05:53 AM 03/26/2019 09:23:56 PM
 # [5] 02/22/2019 03:53:38 PM 03/16/2019 03:26:49 PM
+
+num = formatted_dates_model >= "2019-01-01 00:00:00" & formatted_dates_model <= "2019-02-01 00:00:00"
+sum(num)
+# 1369211
+num2 = formatted_dates_model >= "2019-02-01 00:00:00" & formatted_dates_model <= "2019-03-01 00:00:00" 
+sum(num2)
+# 1259741
+num3 = formatted_dates_model >= "2019-03-01 00:00:00" & formatted_dates_model <= "2019-04-01 00:00:00"
+sum(num3)
+# 1358755
+sum(num+num2+num3)
+# 3987707
+# So in 2019 Jan-March data, we have approximately 1.3 million data points for each month as a result of
+# sample_n function. This is pretty good since we asked for 4 million data points to be randomly selected 
+# from the 22 million. Given that they are almost equally spread apart between the two months, it gives us 
+# confirmation that the data is fair to be worked upon. One thing that stands out is that the sum of all of
+# the months is lesser than 4 million. Therefore, we will need to clear out the data for any dates that may 
+# be a part of the data but not our scope.
