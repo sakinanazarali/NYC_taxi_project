@@ -77,8 +77,17 @@ ncol(atj_2020) # 14
 # For individuals who made a cash payment, the tip fare is recorded as 0, even though they may have made a tip. 
 # The total fare of the trip is present in the dataset, but this would mean that tip/total fare = 0 for such rides
 # which may skew the data.
+
 # The number of trips that were performed using cash payment in the 2019 and 2020 dataset: 
 sum(atj_2019$payment_type=='2') # 544475
 sum(atj_2019$payment_type=='2')/nrow(atj_2019) # 0.2724586 = 27.2% of all trips in 2019 were paid via cash
 sum(atj_2020$payment_type=='2', na.rm = TRUE) # 353495
 sum(atj_2020$payment_type=='2', na.rm = TRUE)/nrow(atj_2020) # 0.3184648 = 31.8% of all trips in 2020 were paid via cash
+
+# Drop all rows that were performed using a cash payment. payment_type == 2. 
+nrow(atj_2019) # 1998377
+atj_2019 <- subset(atj_2019, payment_type!="2")
+nrow(atj_2019)
+nrow(atj_2020) # 1109997
+atj_2020 <- subset(atj_2020, payment_type!="2")
+nrow(atj_2020) # 629492
