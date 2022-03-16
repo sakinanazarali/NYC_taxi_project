@@ -119,5 +119,5 @@ colnames(merged2020)
 names(merged2019)[sapply(merged2019, anyNA)] # "PUZone" "DOZone"
 names(merged2020)[sapply(merged2020, anyNA)] # "PUZone" "DOZone"
 # As mentioned earlier, the zone information (that were merged later on) are not of use in the analysis,
-# but will come handy in the interpretation. Therefore, these data points will not need to be replaced. 
+# but will come handy in the interpretation. Therefore, these data points will not need to be replaced or ommitted.
 # NAs are associated with Pick up and Drop Off locations 264 and 265. 
