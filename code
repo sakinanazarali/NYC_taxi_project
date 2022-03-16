@@ -1,54 +1,84 @@
-jan_to_march_2019 <- read.csv("/Users/SakinaMNazarali/Downloads/2019_Yellow_Taxi_Trip_Data_Jan_to_March.csv")
-jan_to_march_2020 <- read.csv("/Users/SakinaMNazarali/Downloads/2020_Yellow_Taxi_Trip_Data_Jan_to_March.csv")
-nrow(jan_to_march_2019) 
-# 22296496
-nrow(jan_to_march_2020) 
-# 15702064
+# 1) Data Cleaning 
+
+rm(list = ls(all.names = TRUE))
+gc()
+cat("\014")  
+
+april_to_june_2019 <- read.csv("/Users/SakinaMNazarali/Downloads/2019_Yellow_Taxi_Trip_Data_April_to_June.csv")
+april_to_june_2020 <- read.csv("/Users/SakinaMNazarali/Downloads/2020_Yellow_Taxi_Trip_Data_April_to_June.csv")
+nrow(april_to_june_2019) # 21772272
+nrow(april_to_june_2020) # 1110871 
+
 set.seed(12345)
 install.packages("dplyr")
 library(dplyr)
-sample_jtm_2019 <- sample_n(jan_to_march_2019,4000000)
-nrow(sample_jtm_2019) 
-#4000000
-sample_jtm_2020 <- sample_n(jan_to_march_2020,4000000)
-nrow(sample_jtm_2020) 
-#4000000
-write.csv(sample_jtm_2019,"sampled_january_to_march_2019.csv")
-write.csv(sample_jtm_2020,"sampled_january_to_march_2020.csv")
-head(sample_jtm_2019)
-head(sample_jtm_2020)
-str(sample_jtm_2019$tpep_pickup_datetime)
-# Factor w/ 6478822 levels 
 
-# The dates are currently in factors format + AM/PM. In order to be able to perform an analysis on them, 
-# they need to be changed to POSIXct and military time
+# The 2019 dataset has over 21 million records. Randomly select 2 million records.
+atj_2019 <- sample_n(april_to_june_2019,2000000)
+nrow(atj_2019) # 2000000
+atj_2020 <- april_to_june_2020
+str(atj_2019)
+str(atj_2020)
+
+# The dates are currently incharacters format + AM/PM. In order to be able to perform an analysis on
+# them, they need to be changed to POSIXct + military timing
+str(atj_2019$tpep_pickup_datetime) #  chr 
+str(atj_2019$tpep_dropoff_datetime) #  chr 
+str(atj_2020$tpep_pickup_datetime) #  chr 
+str(atj_2020$tpep_dropoff_datetime) #  chr 
 install.packages("lubridate")
 install.packages("tidyverse")
 library(lubridate)
-formatted_dates_model = parse_date_time(sample_jtm_2019$tpep_pickup_datetime, c('Ymd HM', 'mdy IMS p'))
-str(formatted_dates_model)
-# POSIXct[1:4000000]
-head(formatted_dates_model)
-# [1] "2019-03-17 07:43:21 UTC" "2019-01-28 18:12:42 UTC" "2019-03-30 03:05:53 UTC"
-# [4] "2019-03-26 21:23:56 UTC" "2019-02-22 15:53:38 UTC" "2019-03-16 15:26:49 UTC"
-head(sample_jtm_2019$tpep_pickup_datetime)
-# [1] 03/17/2019 07:43:21 AM 01/28/2019 06:12:42 PM 03/30/2019 03:05:53 AM 03/26/2019 09:23:56 PM
-# [5] 02/22/2019 03:53:38 PM 03/16/2019 03:26:49 PM
+atj_2019$tpep_pickup_datetime = parse_date_time(atj_2019$tpep_pickup_datetime, c('Ymd HM', 'mdy IMS p'))
+str(atj_2019$tpep_pickup_datetime) # POSIXct
+atj_2019$tpep_dropoff_datetime = parse_date_time(atj_2019$tpep_dropoff_datetime, c('Ymd HM', 'mdy IMS p'))
+str(atj_2019$tpep_dropoff_datetime) # POSIXct
+atj_2020$tpep_pickup_datetime = parse_date_time(atj_2020$tpep_pickup_datetime, c('Ymd HM', 'mdy IMS p'))
+str(atj_2020$tpep_pickup_datetime) # POSIXct
+atj_2020$tpep_dropoff_datetime = parse_date_time(atj_2020$tpep_dropoff_datetime, c('Ymd HM', 'mdy IMS p'))
+str(atj_2020$tpep_dropoff_datetime) # POSIXct
+# A time that was previously written as "06/18/2019 03:38:34 PM" is now written as "2019-06-18 15:38:34"
 
-num = formatted_dates_model >= "2019-01-01 00:00:00" & formatted_dates_model <= "2019-02-01 00:00:00"
-sum(num)
-# 1369211
-num2 = formatted_dates_model >= "2019-02-01 00:00:00" & formatted_dates_model <= "2019-03-01 00:00:00" 
-sum(num2)
-# 1259741
-num3 = formatted_dates_model >= "2019-03-01 00:00:00" & formatted_dates_model <= "2019-04-01 00:00:00"
-sum(num3)
-# 1358755
-sum(num+num2+num3)
-# 3987707
-# So in 2019 Jan-March data, we have approximately 1.3 million data points for each month as a result of
-# sample_n function. This is pretty good since we asked for 4 million data points to be randomly selected 
-# from the 22 million. Given that they are almost equally spread apart between the two months, it gives us 
-# confirmation that the data is fair to be worked upon. One thing that stands out is that the sum of all of
-# the months is lesser than 4 million. Therefore, we will need to clear out the data for any dates that may 
-# be a part of the data but not our scope.
+# Ensure that the data we have is within the timeframe we are interested in: 
+nrow(atj_2019) # 2000000
+atj_2019 <- atj_2019[atj_2019$tpep_pickup_datetime >= "2019-04-01 00:00:00" & atj_2019$tpep_pickup_datetime <= "2019-06-30 11:59:59",]
+nrow(atj_2019) # 1998403
+nrow(atj_2020) # 1110871
+atj_2020 <- atj_2020[atj_2020$tpep_pickup_datetime >= "2020-04-01 00:00:00" & atj_2020$tpep_pickup_datetime <= "2020-06-30 11:59:59",]
+nrow(atj_2020) # 1109997
+# Therefore, data records that were beyond our timeframe have now been ommitted. Note the difference in number of
+# rows before filtering for the times.
+
+# Check if the randomization was fair (only performed on 2019 data, given that the dataset was huge) and that each month has an approximately 
+# equal number of records, subset the data by month:
+april_2019 = atj_2019[atj_2019$tpep_pickup_datetime >= "2019-04-01 00:00:00" & atj_2019$tpep_pickup_datetime <= "2019-04-30 11:59:59",]
+may_2019 = atj_2019[atj_2019$tpep_pickup_datetime >= "2019-05-01 00:00:00" & atj_2019$tpep_pickup_datetime <= "2019-05-31 11:59:59",]
+june_2019 = atj_2019[atj_2019$tpep_pickup_datetime >= "2019-06-01 00:00:00" & atj_2019$tpep_pickup_datetime <= "2019-06-30 11:59:59",]
+nrow(april_2019) # 673954
+nrow(may_2019) # 687271
+nrow(june_2019) # 618196
+
+# To perform a similar check on 2020 data (even though the dataset was not randomly sampled), subset the data by months:
+april_2020 = atj_2020[atj_2020$tpep_pickup_datetime >= "2020-04-01 00:00:00" & atj_2020$tpep_pickup_datetime <= "2020-04-30 11:59:59",]
+may_2020 = atj_2020[atj_2020$tpep_pickup_datetime >= "2020-05-01 00:00:00" & atj_2020$tpep_pickup_datetime <= "2020-05-31 11:59:59",]
+june_2020 = atj_2020[atj_2020$tpep_pickup_datetime >= "2020-06-01 00:00:00" & atj_2020$tpep_pickup_datetime <= "2020-06-30 11:59:59",]
+nrow(april_2020) # 235508
+nrow(may_2020) # 345519
+nrow(june_2020) # 522945
+
+# Drop unnecessary columns
+ncol(atj_2019) # 18
+atj_2019 = select(atj_2019, -c(store_and_fwd_flag,improvement_surcharge,congestion_surcharge, mta_tax))
+ncol(atj_2019) # 14
+ncol(atj_2020) # 18 
+atj_2020 = select(atj_2020, -c(store_and_fwd_flag,improvement_surcharge,congestion_surcharge, mta_tax))
+ncol(atj_2020) # 14
+
+# For individuals who made a cash payment, the tip fare is recorded as 0, even though they may have made a tip. 
+# The total fare of the trip is present in the dataset, but this would mean that tip/total fare = 0 for such rides
+# which may skew the data.
+# The number of trips that were performed using cash payment in the 2019 and 2020 dataset: 
+sum(atj_2019$payment_type=='2') # 544475
+sum(atj_2019$payment_type=='2')/nrow(atj_2019) # 0.2724586 = 27.2% of all trips in 2019 were paid via cash
+sum(atj_2020$payment_type=='2', na.rm = TRUE) # 353495
+sum(atj_2020$payment_type=='2', na.rm = TRUE)/nrow(atj_2020) # 0.3184648 = 31.8% of all trips in 2020 were paid via cash
