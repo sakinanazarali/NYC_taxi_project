@@ -114,3 +114,10 @@ names(merged2020)[names(merged2020) == 'Zone'] <- 'DOZone'
 names(merged2020)[names(merged2020) == 'Borough'] <- 'DOBorough'
 names(merged2020)[names(merged2020) == 'service_zone'] <- 'DOservice_zone'
 colnames(merged2020)
+
+# Checking if any columns have NA Values
+names(merged2019)[sapply(merged2019, anyNA)] # "PUZone" "DOZone"
+names(merged2020)[sapply(merged2020, anyNA)] # "PUZone" "DOZone"
+# As mentioned earlier, the zone information (that were merged later on) are not of use in the analysis,
+# but will come handy in the interpretation. Therefore, these data points will not need to be replaced. 
+# NAs are associated with Pick up and Drop Off locations 264 and 265. 
