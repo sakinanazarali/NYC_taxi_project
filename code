@@ -6,6 +6,7 @@ cat("\014")
 
 april_to_june_2019 <- read.csv("/Users/SakinaMNazarali/Downloads/2019_Yellow_Taxi_Trip_Data_April_to_June.csv")
 april_to_june_2020 <- read.csv("/Users/SakinaMNazarali/Downloads/2020_Yellow_Taxi_Trip_Data_April_to_June.csv")
+taxi_zones <- read.csv("/Users/SakinaMNazarali/Downloads/taxi+_zone_lookup.csv")
 nrow(april_to_june_2019) # 21772272
 nrow(april_to_june_2020) # 1110871 
 
@@ -87,7 +88,29 @@ sum(atj_2020$payment_type=='2', na.rm = TRUE)/nrow(atj_2020) # 0.3184648 = 31.8%
 # Drop all rows that were performed using a cash payment. payment_type == 2. 
 nrow(atj_2019) # 1998377
 atj_2019 <- subset(atj_2019, payment_type!="2")
-nrow(atj_2019)
+nrow(atj_2019) # 1453902
 nrow(atj_2020) # 1109997
 atj_2020 <- subset(atj_2020, payment_type!="2")
 nrow(atj_2020) # 629492
+
+# Merge the location file to associate pick up and drop off locations with names over numbers.
+# Whilst this does not necessarily make a difference in the analysis, it will in the interpretation. 
+merged2019 <- merge(atj_2019,taxi_zones,by.x = c("PULocationID"),by.y = c("LocationID"))
+names(merged2019)[names(merged2019) == 'Zone'] <- 'PUZone'
+names(merged2019)[names(merged2019) == 'Borough'] <- 'PUBorough'
+names(merged2019)[names(merged2019) == 'service_zone'] <- 'PUservice_zone'
+merged2019 <- merge(merged2019,taxi_zones,by.x = c("DOLocationID"),by.y = c("LocationID"))
+names(merged2019)[names(merged2019) == 'Zone'] <- 'DOZone'
+names(merged2019)[names(merged2019) == 'Borough'] <- 'DOBorough'
+names(merged2019)[names(merged2019) == 'service_zone'] <- 'DOservice_zone'
+colnames(merged2019)
+
+merged2020 <- merge(atj_2020,taxi_zones,by.x = c("PULocationID"),by.y = c("LocationID"))
+names(merged2020)[names(merged2020) == 'Zone'] <- 'PUZone'
+names(merged2020)[names(merged2020) == 'Borough'] <- 'PUBorough'
+names(merged2020)[names(merged2020) == 'service_zone'] <- 'PUservice_zone'
+merged2020 <- merge(merged2020,taxi_zones,by.x = c("DOLocationID"),by.y = c("LocationID"))
+names(merged2020)[names(merged2020) == 'Zone'] <- 'DOZone'
+names(merged2020)[names(merged2020) == 'Borough'] <- 'DOBorough'
+names(merged2020)[names(merged2020) == 'service_zone'] <- 'DOservice_zone'
+colnames(merged2020)
