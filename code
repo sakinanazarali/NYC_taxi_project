@@ -13,9 +13,12 @@ nrow(april_to_june_2020) # 1110871
 set.seed(12345)
 install.packages("dplyr")
 library(dplyr)
+require(data.table)
+require(pastecs)
 
 # The 2019 dataset has over 21 million records. Randomly select 2 million records.
 atj_2019 <- sample_n(april_to_june_2019,2000000)
+
 nrow(atj_2019) # 2000000
 atj_2020 <- april_to_june_2020
 str(atj_2019)
@@ -119,5 +122,38 @@ colnames(merged2020)
 names(merged2019)[sapply(merged2019, anyNA)] # "PUZone" "DOZone"
 names(merged2020)[sapply(merged2020, anyNA)] # "PUZone" "DOZone"
 # As mentioned earlier, the zone information (that were merged later on) are not of use in the analysis,
-# but will come handy in the interpretation. Therefore, these data points will not need to be replaced or ommitted.
+# but will come handy in the interpretation. Therefore, these data points will not need to be replaced or omitted.
 # NAs are associated with Pick up and Drop Off locations 264 and 265. 
+
+# Add a column which calculates the tip per trip as a fraction of the total fare
+merged2019$tipdivtotal <- merged2019$tip_amount/merged2019$total_amount
+merged2020$tipdivtotal <- merged2020$tip_amount/merged2020$total_amount
+head(merged2019)
+head(merged2020)
+
+# Add a column that calculates the trip time (DOtime - PUtime) in seconds
+merged2019$trip_time <- merged2019$tpep_dropoff_datetime - merged2019$tpep_pickup_datetime
+head(merged2019$trip_time)
+merged2020$trip_time <- merged2020$tpep_dropoff_datetime - merged2020$tpep_pickup_datetime
+head(merged2020$trip_time)
+
+# Final check 
+names(merged2019) # check titles for each of the columns
+head(merged2019,5) # check the first five rows for each column
+str(merged2019) # check for the data types of each column (integer, num)
+class(merged2019) # check for the data class of the dataframe
+summary(merged2019) # perform quick overview of data
+dim(merged2019) # check for the number of columns by rows
+
+names(merged2020)
+head(merged2020,5)
+str(merged2020)
+class(merged2020)
+summary(merged2020)
+dim(merged2020)
+
+# 2) Question 1 - OLS - # What variables impact tipping behavior
+
+# HOW TO CHECK FOR NORMALITY
+# SUMMARY STATS, SUMMARY GRAPHS
+# BASIC AND GRAPHICAL ANALYSIS 
