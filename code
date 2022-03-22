@@ -131,11 +131,58 @@ merged2020$tipdivtotal <- merged2020$tip_amount/merged2020$total_amount
 head(merged2019)
 head(merged2020)
 
-# Add a column that calculates the trip time (DOtime - PUtime) in seconds
+# Get rid of rows in the dataframe that have a negative tipdivtotal (You cannot have a negative tip)
+min(merged2019$tipdivtotal) # -1.0142
+dim(merged2019) # 1453348 
+merged2019 <- subset(merged2019,tipdivtotal >= 0)
+min(merged2019$tipdivtotal) # 0 
+dim(merged2019) # 1453114 
+
+min(merged2020$tipdivtotal, na.rm=TRUE) # -49.44776
+dim(merged2020) # 629492 
+merged2020 <- subset(merged2020,tipdivtotal >= 0)
+min(merged2019$tipdivtotal) # 0 
+dim(merged2020) # 629128 
+
+# Add a column that calculates the trip time (DOtime - PUtime)
 merged2019$trip_time <- merged2019$tpep_dropoff_datetime - merged2019$tpep_pickup_datetime
 head(merged2019$trip_time)
 merged2020$trip_time <- merged2020$tpep_dropoff_datetime - merged2020$tpep_pickup_datetime
 head(merged2020$trip_time)
+str(merged2019$trip_time)
+
+# Create a new column that holds the trip_time data as a numeric value, instead of a difftime value
+merged2019$numeric_trip_time <- as.numeric(merged2019$trip_time)
+str(merged2019$trip_time) # difftime
+str(merged2019$numeric_trip_time) # num 
+merged2020$numeric_trip_time <- as.numeric(merged2020$trip_time)
+str(merged2020$numeric_trip_time) # num
+
+# Get rid of rows in the dataframe that have a negative trip_time (You cannot have a negative travel time)
+dim(merged2019) # 1453114 
+min(merged2019$numeric_trip_time) # -344247
+merged2019 <- subset(merged2019, numeric_trip_time >= 0)
+min(merged2019$numeric_trip_time) # 0 
+dim(merged2019) # 1453113 
+
+dim(merged2020) # 629128
+min(merged2020$numeric_trip_time) # -31873874
+merged2020 <- subset(merged2020, numeric_trip_time >= 0)
+min(merged2019$numeric_trip_time) # 0 
+dim(merged2020) # 629127 
+
+# Add a binary column that classifies the tip/totalamount as a binary variable based on the 
+# median tip amount
+merged2019$binary <- ifelse(merged2019$tipdivtotal>median(merged2019$tipdivtotal,na.rm = TRUE),1,0)
+merged2020$binary <- ifelse(merged2020$tipdivtotal>median(merged2020$tipdivtotal, na.rm = TRUE),1,0)
+median(merged2020$tipdivtotal)
+
+# Create a new column that holds the trip_time data as a numeric value, instead of a difftime value
+merged2019$numeric_trip_time <- as.numeric(merged2019$trip_time)
+str(merged2019$trip_time) # difftime
+str(merged2019$numeric_trip_time) # num 
+merged2020$numeric_trip_time <- as.numeric(merged2020$trip_time)
+str(merged2020$numeric_trip_time) # num
 
 # Final check 
 names(merged2019) # check titles for each of the columns
@@ -152,8 +199,36 @@ class(merged2020)
 summary(merged2020)
 dim(merged2020)
 
-# 2) Question 1 - OLS - # What variables impact tipping behavior
+# 2) Summary Analytics
 
-# HOW TO CHECK FOR NORMALITY
-# SUMMARY STATS, SUMMARY GRAPHS
-# BASIC AND GRAPHICAL ANALYSIS 
+# Summary statistics for the merged2019 dataset
+summary(merged2019)
+
+# Summary statistics for the merged2020 dataset
+summary(merged2020)
+
+# Dividing the datasets based on high and low tip amounts
+lowtips_2019 <- subset(merged2019, binary==0)
+hightips_2019 <- subset(merged2019, binary==1)
+
+# Summary analysis for 2019 dataset, for tips lower than the median
+summary(lowtips_2019)
+
+# Summary analysis for 2019 dataset, for tips higher than the median
+summary(hightips_2019)
+
+# Dividing the datasets based on high and low tip amounts
+lowtips_2020 <- subset(merged2020, binary==0)
+hightips_2020 <- subset(merged2020, binary==1)
+
+# Summary analysis for 2019 dataset, for tips lower than the median
+summary(lowtips_2020)
+
+# Summary analysis for 2019 dataset, for tips higher than the median
+summary(hightips_2020)
+
+# Correlation Matrix 2019
+cor(merged2019[, unlist(lapply(merged2019, is.numeric))]) 
+
+# Correlation Matrix 2002
+cor(merged2020[, unlist(lapply(merged2020, is.numeric))]) 
