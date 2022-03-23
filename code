@@ -53,6 +53,9 @@ nrow(atj_2020) # 1109997
 # Therefore, data records that were beyond our timeframe have now been ommitted. Note the difference in number of
 # rows before filtering for the times.
 
+write.csv(atj_2019, "/Users/SakinaMNazarali/Downloads\\atj_2019.csv")
+write.csv(atj_2020, "/Users/SakinaMNazarali/Downloads\\atj_2020.csv")
+
 # Check if the randomization was fair (only performed on 2019 data, given that the dataset was huge) and that each month has an approximately 
 # equal number of records, subset the data by month:
 april_2019 = atj_2019[atj_2019$tpep_pickup_datetime >= "2019-04-01 00:00:00" & atj_2019$tpep_pickup_datetime <= "2019-04-30 11:59:59",]
@@ -124,13 +127,6 @@ names(merged2020)[names(merged2020) == 'Zone'] <- 'DOZone'
 names(merged2020)[names(merged2020) == 'Borough'] <- 'DOBorough'
 names(merged2020)[names(merged2020) == 'service_zone'] <- 'DOservice_zone'
 colnames(merged2020)
-
-# [1] "DOLocationID"          "PULocationID"          "VendorID"              "tpep_pickup_datetime" 
-# [5] "tpep_dropoff_datetime" "passenger_count"       "trip_distance"         "RatecodeID"           
-# [9] "payment_type"          "fare_amount"           "extra"                 "tip_amount"           
-# [13] "tolls_amount"          "total_amount"          "PUBorough"             "PUZone"               
-#[17] "PUservice_zone"        "DOBorough"             "DOZone"                "DOservice_zone"       
-# [21] "tipdivtotal"           "trip_time"             "numeric_trip_time"     "binary" 
 
 # Checking if any columns have NA Values
 names(merged2019)[sapply(merged2019, anyNA)] # "PUZone" "DOZone"
@@ -256,15 +252,34 @@ corrMatrix2020 <- cor(select_if(merged2020,is.numeric))
 corrplot(corrMatrix2020,method="color",tl.col="black",tl.cex = 0.5, col=colorRampPalette(c("black","white","gold"))(100))
 
 # Histograms for 2019 Data
+
+par(mfrow=c(2,2))
+
 hist(hightips_2019$trip_distance, main = "Trip Distance for High Tip 2019 Trips", col = "darkmagenta", freq = FALSE, xlim=c(0,50), xlab = "Trip Distance in Miles")
-hist(lowtips_2019$trip_distance, main = "Trip Distance for Low Tip 2019 Trips", col = "aquamarine", freq = FALSE, xlim=c(0,50), xlab = "Trip Distance in Miles")
+hist(lowtips_2019$trip_distance, main = "Trip Distance for Low Tip 2019 Trips", col = "aquamarine", freq = FALSE, xlab = "Trip Distance in Miles")
 hist(hightips_2019$passenger_count, main = "Passenger Count for High Tip 2019 Trips", freq = FALSE, col = "burlywood4", xlab = "Passenger Counts")
 hist(lowtips_2019$passenger_count, main = "Passenger Count for Low Tip 2019 Trips", freq = FALSE, col = "coral2", xlab = "Passenger Counts")
 hist(hightips_2019$VendorID, main = "VendorID for High Tip 2019 Trips", freq = FALSE, col = "blueviolet", xlab = "VendorID")
 hist(lowtips_2019$VendorID, main = "VendorID for Low Tip 2019 Trips", freq = FALSE, col = "lightblue1", xlab = "VendorID")
-hist(hightips_2019$fare_amount, main = "Fare Amount for High Tip 2019 Trips", freq = FALSE, col =  "mediumorchid1", xlab =  "Fare Amount in $", xlim=c(0,150))
-hist(lowtips_2019$fare_amount, main = "Fare Amount for Low Tip 2019 Trips", freq = FALSE, col =  "navajowhite", xlab =  "Fare Amount in $", xlim=c(0,150))
+hist(hightips_2019$fare_amount, main = "Fare Amount for High Tip 2019 Trips", freq = FALSE, col =  "mediumorchid1", xlab =  "Fare Amount in $")
+hist(lowtips_2019$fare_amount, main = "Fare Amount for Low Tip 2019 Trips", freq = FALSE, col =  "navajowhite", xlab =  "Fare Amount in $")
 hist(hightips_2019$tipdivtotal, main = "Tip/Total for High 2019 Trips", freq = FALSE, col = "palevioletred1", xlab = "Fraction", xlim=c(0,0.4))
 hist(lowtips_2019$tipdivtotal, main = "Tip/Total for Low 2019 Trips", freq = FALSE, col = "seagreen2", xlab = "Fraction", xlim=c(0,0.2))
 hist(hightips_2019$numeric_trip_time, main ="Trip Time in Seconds for High 2019 Trips", freq = FALSE, col = "tan3", xlab = "Time in Seconds", xlim = c(0,10000))
 hist(lowtips_2019$numeric_trip_time, main ="Trip Time in Seconds for Low 2019 Trips", freq = FALSE, col = "yellow", xlab = "Time in Seconds", xlim = c(0,10000))
+
+# Histograms for 2020 Data
+hist(hightips_2020$trip_distance, main = "Trip Distance for High Tip 2020 Trips", col = "darkmagenta", freq = FALSE, xlim=c(0,50), xlab = "Trip Distance in Miles")
+hist(lowtips_2020$trip_distance, main = "Trip Distance for Low Tip 2020 Trips", col = "aquamarine", freq = FALSE, xlim=c(0,50), xlab = "Trip Distance in Miles")
+hist(hightips_2020$passenger_count, main = "Passenger Count for High Tip 2020 Trips", freq = FALSE, col = "burlywood4", xlab = "Passenger Counts")
+hist(lowtips_2020$passenger_count, main = "Passenger Count for Low Tip 2020 Trips", freq = FALSE, col = "coral2", xlab = "Passenger Counts")
+hist(hightips_2020$VendorID, main = "VendorID for High Tip 2020 Trips", freq = FALSE, col = "blueviolet", xlab = "VendorID")
+hist(lowtips_2020$VendorID, main = "VendorID for Low Tip 2020 Trips", freq = FALSE, col = "lightblue1", xlab = "VendorID")
+hist(hightips_2020$fare_amount, main = "Fare Amount for High Tip 2020 Trips", freq = FALSE, col =  "mediumorchid1", xlab =  "Fare Amount in $")
+hist(lowtips_2020$fare_amount, main = "Fare Amount for Low Tip 2020 Trips", freq = FALSE, col =  "navajowhite", xlab =  "Fare Amount in $")
+hist(hightips_2020$tipdivtotal, main = "Tip/Total for High 2020 Trips", freq = FALSE, col = "palevioletred1", xlab = "Fraction", xlim=c(0,0.4))
+hist(lowtips_2020$tipdivtotal, main = "Tip/Total for Low 2020 Trips", freq = FALSE, col = "seagreen2", xlab = "Fraction", xlim=c(0,0.4))
+hist(hightips_2020$numeric_trip_time, main ="Trip Time in Seconds for High 2020 Trips", freq = FALSE, col = "tan3", xlab = "Time in Seconds", xlim = c(0,10000))
+hist(lowtips_2020$numeric_trip_time, main ="Trip Time in Seconds for Low 2020 Trips", freq = FALSE, col = "yellow", xlab = "Time in Seconds", xlim = c(0,10000))
+
+par(mfrow=c(1,1))
