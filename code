@@ -108,6 +108,13 @@ names(merged2019)[names(merged2019) == 'Borough'] <- 'DOBorough'
 names(merged2019)[names(merged2019) == 'service_zone'] <- 'DOservice_zone'
 colnames(merged2019)
 
+# [1] "DOLocationID"          "PULocationID"          "VendorID"              "tpep_pickup_datetime" 
+# [5] "tpep_dropoff_datetime" "passenger_count"       "trip_distance"         "RatecodeID"           
+# [9] "payment_type"          "fare_amount"           "extra"                 "tip_amount"           
+# [13] "tolls_amount"          "total_amount"          "PUBorough"             "PUZone"               
+#[17] "PUservice_zone"        "DOBorough"             "DOZone"                "DOservice_zone"       
+# [21] "tipdivtotal"           "trip_time"             "numeric_trip_time"     "binary" 
+
 merged2020 <- merge(atj_2020,taxi_zones,by.x = c("PULocationID"),by.y = c("LocationID"))
 names(merged2020)[names(merged2020) == 'Zone'] <- 'PUZone'
 names(merged2020)[names(merged2020) == 'Borough'] <- 'PUBorough'
@@ -117,6 +124,13 @@ names(merged2020)[names(merged2020) == 'Zone'] <- 'DOZone'
 names(merged2020)[names(merged2020) == 'Borough'] <- 'DOBorough'
 names(merged2020)[names(merged2020) == 'service_zone'] <- 'DOservice_zone'
 colnames(merged2020)
+
+# [1] "DOLocationID"          "PULocationID"          "VendorID"              "tpep_pickup_datetime" 
+# [5] "tpep_dropoff_datetime" "passenger_count"       "trip_distance"         "RatecodeID"           
+# [9] "payment_type"          "fare_amount"           "extra"                 "tip_amount"           
+# [13] "tolls_amount"          "total_amount"          "PUBorough"             "PUZone"               
+#[17] "PUservice_zone"        "DOBorough"             "DOZone"                "DOservice_zone"       
+# [21] "tipdivtotal"           "trip_time"             "numeric_trip_time"     "binary" 
 
 # Checking if any columns have NA Values
 names(merged2019)[sapply(merged2019, anyNA)] # "PUZone" "DOZone"
