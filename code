@@ -175,7 +175,7 @@ dim(merged2020) # 629127
 # median tip amount
 merged2019$binary <- ifelse(merged2019$tipdivtotal>median(merged2019$tipdivtotal,na.rm = TRUE),1,0)
 merged2020$binary <- ifelse(merged2020$tipdivtotal>median(merged2020$tipdivtotal, na.rm = TRUE),1,0)
-median(merged2020$tipdivtotal)
+median(merged2020$tipdivtotal) # 0.166348
 
 # Create a new column that holds the trip_time data as a numeric value, instead of a difftime value
 merged2019$numeric_trip_time <- as.numeric(merged2019$trip_time)
@@ -232,6 +232,8 @@ cor(merged2019[, unlist(lapply(merged2019, is.numeric))])
 
 # Correlation Matrix 2002
 cor(merged2020[, unlist(lapply(merged2020, is.numeric))]) 
+
+# Correlation Matrix visualizations
 install.packages("corrplot")
 library(corrplot)
 corrMatrix2019 <- cor(select_if(merged2019,is.numeric))
@@ -239,8 +241,7 @@ corrplot(corrMatrix2019,method="color",tl.col="black",tl.cex = 0.5, col=colorRam
 corrMatrix2020 <- cor(select_if(merged2020,is.numeric))
 corrplot(corrMatrix2020,method="color",tl.col="black",tl.cex = 0.5, col=colorRampPalette(c("black","white","gold"))(100))
 
-hightips_2019 <- read.csv("/Users/SakinaMNazarali/Documents/hightips_2019.csv")
-lowtips_2019 <- read.csv("/Users/SakinaMNazarali/Documents/lowtips_2019.csv")
+# Histograms for 2019 Data
 hist(hightips_2019$trip_distance, main = "Trip Distance for High Tip 2019 Trips", col = "darkmagenta", freq = FALSE, xlim=c(0,50), xlab = "Trip Distance in Miles")
 hist(lowtips_2019$trip_distance, main = "Trip Distance for Low Tip 2019 Trips", col = "aquamarine", freq = FALSE, xlim=c(0,50), xlab = "Trip Distance in Miles")
 hist(hightips_2019$passenger_count, main = "Passenger Count for High Tip 2019 Trips", freq = FALSE, col = "burlywood4", xlab = "Passenger Counts")
