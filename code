@@ -252,9 +252,7 @@ corrMatrix2020 <- cor(select_if(merged2020,is.numeric))
 corrplot(corrMatrix2020,method="color",tl.col="black",tl.cex = 0.5, col=colorRampPalette(c("black","white","gold"))(100))
 
 # Histograms for 2019 Data
-
 par(mfrow=c(2,2))
-
 hist(hightips_2019$trip_distance, main = "Trip Distance for High Tip 2019 Trips", col = "darkmagenta", freq = FALSE, xlim=c(0,50), xlab = "Trip Distance in Miles")
 hist(lowtips_2019$trip_distance, main = "Trip Distance for Low Tip 2019 Trips", col = "aquamarine", freq = FALSE, xlab = "Trip Distance in Miles")
 hist(hightips_2019$passenger_count, main = "Passenger Count for High Tip 2019 Trips", freq = FALSE, col = "burlywood4", xlab = "Passenger Counts")
@@ -283,3 +281,69 @@ hist(hightips_2020$numeric_trip_time, main ="Trip Time in Seconds for High 2020 
 hist(lowtips_2020$numeric_trip_time, main ="Trip Time in Seconds for Low 2020 Trips", freq = FALSE, col = "yellow", xlab = "Time in Seconds", xlim = c(0,10000))
 
 par(mfrow=c(1,1))
+
+# 2) Question 1 - OLS - # What variables impact tipping behavior
+
+modelKS <- lm(tipdivtotal~.,data=merged2019)
+options(scipen = 999)
+summary(modelKS)
+
+# Residual standard error: 0.03003 on 1449111 degrees of freedom
+# (4069 observations deleted due to missingness)
+# Multiple R-squared:  0.6882,	Adjusted R-squared:  0.688 
+# F-statistic:  6103 on 524 and 1449111 DF,  p-value: < 0.00000000000000022
+
+# Adjusted R2 of kitchen sink model, 0.688. The aim would be to be as close to the
+# 0.688 without all the various variables. Looking at the kitchen sink model, 
+# the significant variables are DOLocationID, VendorID, tpep_pickup_datetime, 
+# tpep_dropoff_datetime, trip_distance, ratecodeID, payment_type, fare_amount, 
+# extra, tip_amount, tolls_amount, total_amount. 
+
+model1 <- lm(tipdivtotal ~ DOLocationID + VendorID + tpep_pickup_datetime + tpep_dropoff_datetime + trip_distance + RatecodeID + fare_amount + extra + tolls_amount + total_amount, data =  merged2019)
+summary(model1)
+# adjRsquared = 0.4647
+
+model2 <- lm(tip_amount ~ DOLocationID + VendorID + tpep_pickup_datetime + tpep_dropoff_datetime + trip_distance + RatecodeID + fare_amount + extra + tolls_amount + total_amount, data =  merged2019)
+summary(model2)
+# adjRsquared = 0.96
+
+# We have to decide between keeping fare_amount, extra, tolls_amount VERSUS only keeping total_amount because the former three add up to the latter one
+
+# Taking out fare_amount, extra, and tolls_amount
+model3 <- lm(tipdivtotal ~ DOLocationID + VendorID + tpep_pickup_datetime + tpep_dropoff_datetime + trip_distance + RatecodeID + total_amount, data =  merged2019)
+summary(model3)
+#adjRsquared = 0.0236
+model4 <- lm(tip_amount ~ DOLocationID + VendorID + tpep_pickup_datetime + tpep_dropoff_datetime + trip_distance + RatecodeID + total_amount, data =  merged2019)
+summary(model4)
+#adjRsquared = 0.5562
+
+# Taking out total_amount
+model5 <- lm(tipdivtotal ~ DOLocationID + VendorID + tpep_pickup_datetime + tpep_dropoff_datetime + trip_distance + RatecodeID + fare_amount + extra + tolls_amount, data =  merged2019)
+summary(model5)
+#adjRsquared = 0.01127
+model6 <- lm(tip_amount ~ DOLocationID + VendorID + tpep_pickup_datetime + tpep_dropoff_datetime + trip_distance + RatecodeID + fare_amount + extra + tolls_amount, data =  merged2019)
+summary(model6)
+#adjRsquared = 0.5063
+
+# Established that total_amount carries more significance than what composes the total_amount itself (fare + extra + tolls + deleted standard charges)
+# Remove RateCodeID
+model7 <- lm(tipdivtotal ~ DOLocationID + VendorID + tpep_pickup_datetime + tpep_dropoff_datetime + trip_distance + total_amount, data =  merged2019)
+summary(model7)
+#adjRsquared = 0.0197
+model8 <- lm(tip_amount ~ DOLocationID + VendorID + tpep_pickup_datetime + tpep_dropoff_datetime + trip_distance + total_amount, data =  merged2019)
+summary(model8)
+#adjRsquared = 0.5558
+
+# Remove DOLocationID
+model9 <- lm(tip_amount ~  VendorID + tpep_pickup_datetime + tpep_dropoff_datetime + trip_distance + total_amount, data =  merged2019)
+summary(model9)
+#adjRsquared = 0.5557
+
+# Remove VendorID
+model10 <- lm(tip_amount ~ tpep_pickup_datetime + tpep_dropoff_datetime + trip_distance + total_amount, data =  merged2019)
+summary(model10)
+# adjRsquared = 0.5552
+
+model11 <- lm(tip_amount ~ trip_distance + total_amount, data =  merged2019)
+summary(model11)
+# adjRsquared = 0.5551
