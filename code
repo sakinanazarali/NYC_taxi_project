@@ -53,8 +53,6 @@ nrow(atj_2020) # 1109997
 # Therefore, data records that were beyond our timeframe have now been ommitted. Note the difference in number of
 # rows before filtering for the times.
 
-write.csv(atj_2019, "/Users/SakinaMNazarali/Downloads\\atj_2019.csv")
-write.csv(atj_2020, "/Users/SakinaMNazarali/Downloads\\atj_2020.csv")
 
 # Check if the randomization was fair (only performed on 2019 data, given that the dataset was huge) and that each month has an approximately 
 # equal number of records, subset the data by month:
@@ -135,11 +133,18 @@ names(merged2020)[sapply(merged2020, anyNA)] # "PUZone" "DOZone"
 # but will come handy in the interpretation. Therefore, these data points will not need to be replaced or omitted.
 # NAs are associated with Pick up and Drop Off locations 264 and 265. 
 
+library(ggplot2)
+ggplot(merged2019, aes(x=tip_amount,y=total_amount)) + geom_point() + geom_smooth(method=lm, se=FALSE, col='blue', size=1) + ggtitle("Tip/Total 2019 Data Points")
+ggplot(merged2020, aes(x=tip_amount,y=total_amount)) + geom_point() + geom_smooth(method=lm, se=FALSE, col='red', size=1) + ggtitle("Tip/Total 2020 Data Points")
+
 # Add a column which calculates the tip per trip as a fraction of the total fare
 merged2019$tipdivtotal <- merged2019$tip_amount/merged2019$total_amount
 merged2020$tipdivtotal <- merged2020$tip_amount/merged2020$total_amount
 head(merged2019)
 head(merged2020)
+
+plot(merged2019$tip_amount, merged2019$tipdivtotal)
+plot(merged2020$tip_amount, merged2020$tipdivtotal)
 
 # Get rid of rows in the dataframe that have a negative tipdivtotal (You cannot have a negative tip)
 min(merged2019$tipdivtotal) # -1.0142
@@ -153,6 +158,44 @@ dim(merged2020) # 629492
 merged2020 <- subset(merged2020,tipdivtotal >= 0)
 min(merged2019$tipdivtotal) # 0 
 dim(merged2020) # 629128 
+
+# Get rid of rows in the dataframe that have negative tip_amount
+min(merged2019$tip_amount) # -88.88
+dim(merged2019)
+merged2019 <- subset(merged2019, tip_amount >= 0)
+min(merged2019$tip_amount) # 0 
+dim(merged2019)
+
+min(merged2020$tip_amount) # -36.3
+dim(merged2020)
+merged2020 <- subset(merged2020, tip_amount >= 0)
+min(merged2020$tip_amount) # 0 
+dim(merged2020)
+
+library(ggplot2)
+ggplot(merged2019, aes(x=tip_amount,y=tipdivtotal)) + geom_point() + geom_smooth(method=lm, se=FALSE, col='blue', size=1) + ggtitle("Tip/Total 2019 Data Points")
+ggplot(merged2020 , aes(x=tip_amount,y=tipdivtotal)) + geom_point() + geom_smooth(method=lm, se=FALSE, col='red', size=1) + ggtitle("Tip/Total 2020 Data Points")
+
+# Look at the tip_amount table and observe anomalies
+summary(merged2019$tip_amount)
+# Min. 1st Qu.  Median    Mean    3rd Qu.    Max. 
+# 0.000   1.700   2.360   3.087   3.460 333.330 
+summary(merged2020$tip_amount)
+# Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+# 0.000   1.460   2.160   2.583   3.060 442.180 
+
+# Looking at the maximum tip amounts, these could be heavily skewing the data. 
+# Eliminate all rows with tips more than $50 
+merged2019 <- subset(merged2019, tip_amount <= 50)
+merged2020 <- subset(merged2020, tip_amount <= 50)
+
+library(ggplot2)
+ggplot(merged2019, aes(x=tip_amount,y=tipdivtotal)) + geom_point() + geom_smooth(method=lm, se=FALSE, col='blue', size=1) + ggtitle("Tip/Total 2019 Data Points")
+ggplot(merged2020 , aes(x=tip_amount,y=tipdivtotal)) + geom_point() + geom_smooth(method=lm, se=FALSE, col='red', size=1) + ggtitle("Tip/Total 2020 Data Points")
+
+# Check if tipdivtotal and tip_amount are normally distributed 
+hist(merged2019$tipdivtotal)
+hist(merged2020$tipdivtotal)
 
 # Add a column that calculates the trip time (DOtime - PUtime)
 merged2019$trip_time <- merged2019$tpep_dropoff_datetime - merged2019$tpep_pickup_datetime
@@ -181,21 +224,61 @@ merged2020 <- subset(merged2020, numeric_trip_time >= 0)
 min(merged2019$numeric_trip_time) # 0 
 dim(merged2020) # 629127 
 
-# Add a binary column that classifies the tip/totalamount as a binary variable based on the 
-# median tip amount
+# Add a binary column that classifies the tip/totalamount as a binary variable based on the median tip amount
 merged2019$binary <- ifelse(merged2019$tipdivtotal>median(merged2019$tipdivtotal,na.rm = TRUE),1,0)
 merged2020$binary <- ifelse(merged2020$tipdivtotal>median(merged2020$tipdivtotal, na.rm = TRUE),1,0)
 median(merged2020$tipdivtotal) # 0.166348
 
-# Create a new column that holds the trip_time data as a numeric value, instead of a difftime value
-merged2019$numeric_trip_time <- as.numeric(merged2019$trip_time)
-str(merged2019$trip_time) # difftime
-str(merged2019$numeric_trip_time) # num 
-merged2020$numeric_trip_time <- as.numeric(merged2020$trip_time)
-str(merged2020$numeric_trip_time) # num
+# Add a dummy variable that classifies thepickup time by the time of the day where if the pickup time is 
+# between 00:00:00 and 05:00:00 = 1 Early Morning
+# between 05:00:01 and 09:00:00 = 2 Morning Rush Hour
+# between 09:00:01 and 16:00:00 = 3 Working Hours 
+# between 16:00:01 and 20:00:00 = 4 Evening Rush Hour
+# between 20:00:01 and 23:59:59 = 5 Night 
+merged2019$PUdate <- as.Date(merged2019$tpep_pickup_datetime)
+class(merged2019$PUdate)
+merged2019$PUtime <- format(merged2019$tpep_pickup_datetime,format = "%H:%M:%S")
+merged2019$PUtime <- as.times(merged2019$PUtime)
+class(merged2019$PUtime)
+library(chron)
+breaks <- c('00:00:00', '05:00:00', '09:00:00', '16:00:00','20:00:00', '23:59:59')
+labels <- c(1,2,3,4,5)
+h1 <- chron(times=merged2019$PUtime)
+br <- chron(times=breaks)
+merged2019$time_of_day <-  cut(h1, br, labels=labels)
+str(merged2019$time_of_day) # Factor
+merged2019$time_of_day <- as.numeric(merged2019$time_of_day)
+head(merged2019)
+
+merged2020$PUdate <- as.Date(merged2020$tpep_pickup_datetime)
+class(merged2020$PUdate)
+merged2020$PUtime <- format(merged2020$tpep_pickup_datetime,format = "%H:%M:%S")
+merged2020$PUtime <- as.times(merged2020$PUtime)
+class(merged2020$PUtime)
+library(chron)
+breaks <- c('00:00:00', '05:00:00', '09:00:00', '16:00:00','20:00:00', '23:59:59')
+labels <- c(1,2,3,4,5)
+h2 <- chron(times=merged2020$PUtime)
+br <- chron(times=breaks)
+merged2020$time_of_day <-  cut(h2, br, labels=labels)
+str(merged2020$time_of_day) # Factor
+merged2020$time_of_day <- as.numeric(merged2020$time_of_day)
+head(merged2020)
+
+# Classify the days of the week using categorical/dummy variables therefore, to assign every date with a weekday.
+# Weekdays are classified between 1-7 as shown below:
+# Sunday = 1
+# Monday = 2
+# Saturday = 7
+merged2019$dow <- as.POSIXlt(merged2019$PUdate)$wday + 1
+str(merged2019$dow)
+head(merged2019)
+merged2020$dow <- as.POSIXlt(merged2020$PUdate)$wday + 1
+str(merged2020$dow)
+head(merged2020)
 
 # Final check 
-names(merged2019) # check titles for each of the columns
+names(merged2019) # check titles for each of the column
 head(merged2019,5) # check the first five rows for each column
 str(merged2019) # check for the data types of each column (integer, num)
 class(merged2019) # check for the data class of the dataframe
@@ -281,69 +364,3 @@ hist(hightips_2020$numeric_trip_time, main ="Trip Time in Seconds for High 2020 
 hist(lowtips_2020$numeric_trip_time, main ="Trip Time in Seconds for Low 2020 Trips", freq = FALSE, col = "yellow", xlab = "Time in Seconds", xlim = c(0,10000))
 
 par(mfrow=c(1,1))
-
-# 2) Question 1 - OLS - # What variables impact tipping behavior
-
-modelKS <- lm(tipdivtotal~.,data=merged2019)
-options(scipen = 999)
-summary(modelKS)
-
-# Residual standard error: 0.03003 on 1449111 degrees of freedom
-# (4069 observations deleted due to missingness)
-# Multiple R-squared:  0.6882,	Adjusted R-squared:  0.688 
-# F-statistic:  6103 on 524 and 1449111 DF,  p-value: < 0.00000000000000022
-
-# Adjusted R2 of kitchen sink model, 0.688. The aim would be to be as close to the
-# 0.688 without all the various variables. Looking at the kitchen sink model, 
-# the significant variables are DOLocationID, VendorID, tpep_pickup_datetime, 
-# tpep_dropoff_datetime, trip_distance, ratecodeID, payment_type, fare_amount, 
-# extra, tip_amount, tolls_amount, total_amount. 
-
-model1 <- lm(tipdivtotal ~ DOLocationID + VendorID + tpep_pickup_datetime + tpep_dropoff_datetime + trip_distance + RatecodeID + fare_amount + extra + tolls_amount + total_amount, data =  merged2019)
-summary(model1)
-# adjRsquared = 0.4647
-
-model2 <- lm(tip_amount ~ DOLocationID + VendorID + tpep_pickup_datetime + tpep_dropoff_datetime + trip_distance + RatecodeID + fare_amount + extra + tolls_amount + total_amount, data =  merged2019)
-summary(model2)
-# adjRsquared = 0.96
-
-# We have to decide between keeping fare_amount, extra, tolls_amount VERSUS only keeping total_amount because the former three add up to the latter one
-
-# Taking out fare_amount, extra, and tolls_amount
-model3 <- lm(tipdivtotal ~ DOLocationID + VendorID + tpep_pickup_datetime + tpep_dropoff_datetime + trip_distance + RatecodeID + total_amount, data =  merged2019)
-summary(model3)
-#adjRsquared = 0.0236
-model4 <- lm(tip_amount ~ DOLocationID + VendorID + tpep_pickup_datetime + tpep_dropoff_datetime + trip_distance + RatecodeID + total_amount, data =  merged2019)
-summary(model4)
-#adjRsquared = 0.5562
-
-# Taking out total_amount
-model5 <- lm(tipdivtotal ~ DOLocationID + VendorID + tpep_pickup_datetime + tpep_dropoff_datetime + trip_distance + RatecodeID + fare_amount + extra + tolls_amount, data =  merged2019)
-summary(model5)
-#adjRsquared = 0.01127
-model6 <- lm(tip_amount ~ DOLocationID + VendorID + tpep_pickup_datetime + tpep_dropoff_datetime + trip_distance + RatecodeID + fare_amount + extra + tolls_amount, data =  merged2019)
-summary(model6)
-#adjRsquared = 0.5063
-
-# Established that total_amount carries more significance than what composes the total_amount itself (fare + extra + tolls + deleted standard charges)
-# Remove RateCodeID
-model7 <- lm(tipdivtotal ~ DOLocationID + VendorID + tpep_pickup_datetime + tpep_dropoff_datetime + trip_distance + total_amount, data =  merged2019)
-summary(model7)
-#adjRsquared = 0.0197
-model8 <- lm(tip_amount ~ DOLocationID + VendorID + tpep_pickup_datetime + tpep_dropoff_datetime + trip_distance + total_amount, data =  merged2019)
-summary(model8)
-#adjRsquared = 0.5558
-
-# Remove DOLocationID
-model9 <- lm(tip_amount ~  VendorID + tpep_pickup_datetime + tpep_dropoff_datetime + trip_distance + total_amount, data =  merged2019)
-summary(model9)
-#adjRsquared = 0.5557
-
-# Remove VendorID
-model10 <- lm(tip_amount ~ tpep_pickup_datetime + tpep_dropoff_datetime + trip_distance + total_amount, data =  merged2019)
-summary(model10)
-# adjRsquared = 0.5552
-
-model11 <- lm(tip_amount ~ trip_distance + total_amount, data =  merged2019)
-summary(model11)
-# adjRsquared = 0.5551
