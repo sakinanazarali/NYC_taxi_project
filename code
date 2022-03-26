@@ -247,7 +247,7 @@ h1 <- chron(times=merged2019$PUtime)
 br <- chron(times=breaks)
 merged2019$time_of_day <-  cut(h1, br, labels=labels)
 str(merged2019$time_of_day) # Factor
-merged2019$time_of_day <- as.numeric(merged2019$time_of_day)
+merged2019$time_of_day <- as.integer(merged2019$time_of_day)
 head(merged2019)
 
 merged2020$PUdate <- as.Date(merged2020$tpep_pickup_datetime)
@@ -262,7 +262,7 @@ h2 <- chron(times=merged2020$PUtime)
 br <- chron(times=breaks)
 merged2020$time_of_day <-  cut(h2, br, labels=labels)
 str(merged2020$time_of_day) # Factor
-merged2020$time_of_day <- as.numeric(merged2020$time_of_day)
+merged2020$time_of_day <- as.integer(merged2020$time_of_day)
 head(merged2020)
 
 # Classify the days of the week using categorical/dummy variables therefore, to assign every date with a weekday.
@@ -321,18 +321,22 @@ summary(lowtips_2020)
 summary(hightips_2020)
 
 # Correlation Matrix 2019
-cor(merged2019[, unlist(lapply(merged2019, is.numeric))]) 
+cor(merged2019[, unlist(lapply(merged2019, is.numeric))], use="complete.obs") 
 
 # Correlation Matrix 2002
-cor(merged2020[, unlist(lapply(merged2020, is.numeric))]) 
+cor(merged2020[, unlist(lapply(merged2020, is.numeric))], use="complete.obs") 
 
 # Correlation Matrix visualizations
 install.packages("corrplot")
 library(corrplot)
-corrMatrix2019 <- cor(select_if(merged2019,is.numeric))
-corrplot(corrMatrix2019,method="color",tl.col="black",tl.cex = 0.5, col=colorRampPalette(c("black","white","gold"))(100))
-corrMatrix2020 <- cor(select_if(merged2020,is.numeric))
+corrMatrix2019 <- cor(select_if(merged2019,is.numeric), use="complete.obs")
+corrplot(corrMatrix2019, method="color",tl.col="black",tl.cex = 0.5, col=colorRampPalette(c("black","white","gold"))(100))
+corrMatrix2020 <- cor(select_if(merged2020,is.numeric), use="complete.obs")
 corrplot(corrMatrix2020,method="color",tl.col="black",tl.cex = 0.5, col=colorRampPalette(c("black","white","gold"))(100))
+
+# Create an interaction variable between total_amount and trip_time
+merged2019$totamt_x_triptm <- merged2019$total_amount * merged2019$trip_time 
+merged2020$totamt_x_triptm <- merged2020$total_amount * merged2020$trip_time 
 
 # Histograms for 2019 Data
 par(mfrow=c(2,2))
