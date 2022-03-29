@@ -277,6 +277,17 @@ merged2020$dow <- as.POSIXlt(merged2020$PUdate)$wday + 1
 str(merged2020$dow)
 head(merged2020)
 
+# Space total_amount between 0 and 200 # Max is 9435 hence outlier
+merged2019 <- subset(merged2019, total_amount <= 200)
+merged2020 <- subset(merged2020, total_amount <= 200)
+merged2019 <- subset(merged2019, total_amount >= 0)
+merged2020 <- subset(merged2020, total_amount >= 0)
+
+
+# Get rid of trip_distance field beyond 100 # Max is 830.90, hence outliers
+merged2019 <- subset(merged2019, trip_distance <= 100)
+merged2020 <- subset(merged2020, trip_distance <= 100)
+
 # Final check 
 names(merged2019) # check titles for each of the column
 head(merged2019,5) # check the first five rows for each column
@@ -299,6 +310,18 @@ summary(merged2019)
 
 # Summary statistics for the merged2020 dataset
 summary(merged2020)
+
+# Correlation Matrix visualizations
+install.packages("corrplot")
+library(corrplot)
+corrMatrix2019 <- cor(select_if(merged2019,is.numeric), use="complete.obs")
+corrplot(corrMatrix2019, method="color",tl.col="black",tl.cex = 0.5, col=colorRampPalette(c("black","white","gold"))(100))
+corrMatrix2020 <- cor(select_if(merged2020,is.numeric), use="complete.obs")
+corrplot(corrMatrix2020,method="color",tl.col="black",tl.cex = 0.5, col=colorRampPalette(c("black","white","gold"))(100))
+
+# Create an interaction variable between total_amount and trip_time
+merged2019$totamt_x_tripdist <- merged2019$total_amount * merged2019$trip_distance
+merged2020$totamt_x_tripdist <- merged2020$total_amount * merged2020$trip_distance
 
 # Dividing the datasets based on high and low tip amounts
 lowtips_2019 <- subset(merged2019, binary==0)
@@ -325,18 +348,6 @@ cor(merged2019[, unlist(lapply(merged2019, is.numeric))], use="complete.obs")
 
 # Correlation Matrix 2002
 cor(merged2020[, unlist(lapply(merged2020, is.numeric))], use="complete.obs") 
-
-# Correlation Matrix visualizations
-install.packages("corrplot")
-library(corrplot)
-corrMatrix2019 <- cor(select_if(merged2019,is.numeric), use="complete.obs")
-corrplot(corrMatrix2019, method="color",tl.col="black",tl.cex = 0.5, col=colorRampPalette(c("black","white","gold"))(100))
-corrMatrix2020 <- cor(select_if(merged2020,is.numeric), use="complete.obs")
-corrplot(corrMatrix2020,method="color",tl.col="black",tl.cex = 0.5, col=colorRampPalette(c("black","white","gold"))(100))
-
-# Create an interaction variable between total_amount and trip_time
-merged2019$totamt_x_triptm <- merged2019$total_amount * merged2019$trip_time 
-merged2020$totamt_x_triptm <- merged2020$total_amount * merged2020$trip_time 
 
 # Histograms for 2019 Data
 par(mfrow=c(2,2))
@@ -367,4 +378,231 @@ hist(lowtips_2020$tipdivtotal, main = "Tip/Total for Low 2020 Trips", freq = FAL
 hist(hightips_2020$numeric_trip_time, main ="Trip Time in Seconds for High 2020 Trips", freq = FALSE, col = "tan3", xlab = "Time in Seconds", xlim = c(0,10000))
 hist(lowtips_2020$numeric_trip_time, main ="Trip Time in Seconds for Low 2020 Trips", freq = FALSE, col = "yellow", xlab = "Time in Seconds", xlim = c(0,10000))
 
+head(hightips_2019)
 par(mfrow=c(1,1))
+
+
+# 2) Question 1 - OLS - # What variables impact tipping behavior
+
+# AIC of using tip_amount as DV - justify why (AIC score when compared to AIC of using tip_amount of DV, controls for outliers and extremes)
+
+hist(merged2019$trip_distance, xlim = c(0,200))
+summary(merged2019$trip_distance, merged2019$total_amount)
+plot(merged2019$trip_distance, merged2019$total_amount)
+model1 <- lm(tipdivtotal ~ DOLocationID + VendorID + passenger_count + trip_distance + RatecodeID + total_amount + numeric_trip_time + time_of_day + dow + totamt_x_tripdist, data = merged2019)
+summary(model1)
+model2 <- lm(tipdivtotal ~ VendorID + passenger_count + trip_distance + total_amount + numeric_trip_time + time_of_day + dow + totamt_x_tripdist, data = merged2019)
+summary(model2)
+model3 <- lm(tipdivtotal ~ VendorID + passenger_count + trip_distance + total_amount + time_of_day + dow + totamt_x_tripdist, data = merged2019)
+summary(model3)
+model4 <- lm(tipdivtotal ~ VendorID + passenger_count + trip_distance + total_amount + totamt_x_tripdist, data = merged2019)
+AIC(model1)
+AIC(model2)
+AIC(model3)
+AIC(model4)
+
+require(data.table)
+require(pastecs)
+install.packages("stargazer")
+library(stargazer)
+stargazer(model1, model2, model3, model4, type = "text")
+
+# Looking at AIC scores and the adjusted R2, model 2 is the best way to go.  
+
+
+
+
+# 3) Question 2 - 
+
+# As one might expect, logistic regression makes ample use of the logistic function as it outputs values 
+# between 0 and 1 which we can use to model and predict responses.
+
+merged2019$binary.factor <- factor(merged2019$binary)
+m2019 <- sort(sample(nrow(merged2019), nrow(merged2019)*0.8))
+train2019 <- merged2019[m2019,]
+test2019 <- merged2019[-m2019,]
+dim(train2019) # 1159940      30
+dim(test2019) # 289985     30
+
+train2019$time_of_day <- as.factor(train2019$time_of_day)
+train2019$dow <- as.factor(train2019$dow)
+train2019$VendorID <- as.factor(train2019$VendorID)
+logitM <- glm(tipdivtotal ~ VendorID + passenger_count + trip_distance + total_amount + numeric_trip_time + time_of_day + dow + totamt_x_tripdist, data = train2019, family = "binomial")
+summary(logitM)
+
+# The results of this logit regression show that a certain vendorID(1) has a correlation with higher tips. 
+# It also shows that time_of_day5 has a significant impact on tip variability (whether it is high or low). 
+# Beyond these, the remaining variables are known to have an impact (even from OLS) with the exception of 
+# passenger_count which is a control. 
+
+# With our fitted model, we are interested in seeing how it would perform against our testing dataset. We can do 
+# so by building a confusion matrix to display the success rate of the model's predictions on the testing dataset. 
+# The predict function performs a prediction on a trip's tip based on the variables within the testing dataset 
+# (total distance, trip time, tip amount, etc). The output of this function will provide us with probabilities. 
+# The next command creates a vector of the 'Low' (low category, denoted as 0 in the dataset) with respect to the number
+# of observations in the training data set. This is then converted into 'High' if the predicted probability is greater than half. 
+
+# The table function builds the confusion matrix. 
+
+test2019$time_of_day <- as.factor(test2019$time_of_day)
+test2019$dow <- as.factor(test2019$dow)
+test2019$VendorID <- as.factor(test2019$VendorID)
+
+tips.prob = predict(logitM, test2019, type="response") # Predict on the test2019 test using the logitM model
+tips.pred = rep("0",dim(train2019)[1]) # Place a "0" (low) on all of the rows in the tips.pred
+tips.pred[tips.prob>.5] = "1" # if the predicted probability is greater than 0.5, then label it as "1" (high)
+cm <- table(tips.pred,train2019$binary.factor)
+cm
+
+# tips.pred      0      1
+#       0 578505  581427
+#       1      3      5
+# Where there is a match between 0,0 and 1,1, these are known as true positives and true positives, hence, 
+# correctly predicted. 
+
+
+# Calculate precision, accuracy, and recall 
+
+# Recall is not so important, here, because we are interested in both, the ones it labelled as positive and the ones 
+# it labelled as negative. Recall would have been of better interest if we were only interested in collecting
+# all the "positive" samples. 
+
+# Assume that the model predicting a low tip when the tip is actually low is TP = 578505
+# Assume that the model predicting a high tip when the tip is actually high is TN = 5
+# Assume that the model predicting a high tip when the tip is actually low is FP = 3
+# Assume that the model predicting a low tip when the tip is actually high is FN = 581427
+
+# Calculate manually since computer is unable to get 'caret' package
+cm[1] # 578505
+cm[2] # 3
+cm[3] # 581427
+cm[4] # 5
+
+
+accuracyLOGIT <- sum(cm[1], cm[4]) / sum(cm[1:4]) 
+accuracyLOGIT #  0.4987413
+# The accuracy rate is 49.87%, really, close to 50% which means that it is as efficient or slightly less than random guessing. 
+# This could imply that the model being used is not a very strong one. How many did it correctly predict as true?
+
+precisionLOGIT <- cm[4] / sum(cm[4], cm[2])
+precisionLOGIT # 0.625
+# precision refers to how precise/accurate the model is when it comes to predicting positively, so basically, out of the 8 high tips
+# that the model predicted, 5 were correct. Out of those predicted high, how many of them were actually high tips. 
+
+sensitivityLOGIT <- cm[4] / sum(cm[4], cm[3])
+sensitivityLOGIT # 0.000008599458
+# Sensitivity or recall measures how well the model predicted the positives that it predicted properly in comparison to the ones that 
+# were actually high tips. Here, the model has performed terribly, almost missing every high tip and predicting it as low. The model
+# is very good at predicting low tips, but that is because it predicts pretty much everything as low tips. 
+
+fscoreLOGIT <- (2 * (sensitivityLOGIT * precisionLOGIT))/(sensitivityLOGIT + precisionLOGIT)
+fscoreLOGIT # 0.00001719868
+# The F1 score indicates that the model does not do too well. The closer to 1 the score, the better. It measures for accuracy/
+# reliability 
+
+# Trying to refine our model using R's stepwise regression model (given that the results from LOGIT were not too pleasing)
+
+help(glm)
+install.packages("MASS")
+library(MASS)
+head(train2019)
+KSmodel <- glm(binary.factor ~ DOLocationID + VendorID + passenger_count + trip_distance + total_amount + 
+                 numeric_trip_time + time_of_day + dow + totamt_x_tripdist, data = train2019, family = "binomial")
+BModel <- stepAIC(KSmodel)   
+
+# Result suggests to use all the variables we fed the model apart from DOLocationID (it eliminates and adds back variables one by one 
+# to find the model with the lowest AIC). The model suggested by stepwise regression is precisely the model we used before
+# in order to train our data and then tested on it. This gives an affirmation that the model we are using is fairly good, given the data
+# we have, even though the predictions were not very accurate. 
+
+#                    Df Deviance     AIC
+# <none>                  1316816 1316852
+# - passenger_count    1  1316834 1316868
+# - dow                6  1317047 1317071
+# - numeric_trip_time  1  1317629 1317663
+# - time_of_day        4  1317838 1317866
+# - totamt_x_tripdist  1  1318272 1318306
+# - trip_distance      1  1336001 1336035
+# - total_amount       1  1336429 1336463
+# - VendorID           2  1573577 1573609
+
+# 3) CART
+
+install.packages("rpart")
+install.packages("rpart.plot")
+library(rpart)
+library(rpart.plot)
+
+# Use the data created above for trained 2019 data to test on 2019 test data using CART
+
+train2019 <- merged2019[m2019,]
+test2019 <- merged2019[-m2019,]
+prop.table(table(train2019$binary)) # Represent the column figures as percentages of the total 
+prop.table(table(test2019$binary)) 
+
+# CART prediction by inputting the variables 
+train2019$time_of_day <- as.integer(train2019$time_of_day)
+train2019$dow <- as.integer(train2019$dow)
+train2019$VendorID <- as.integer(train2019$VendorID)
+test2019$time_of_day <- as.integer(test2019$time_of_day)
+test2019$dow <- as.integer(test2019$dow)
+test2019$VendorID <- as.integer(test2019$VendorID)
+CART1 <- rpart(binary ~ VendorID + passenger_count + trip_distance + total_amount + 
+                 numeric_trip_time + time_of_day + dow + totamt_x_tripdist, data = train2019, method = 'class') 
+C1 <- rpart.plot(CART1, fallen.leaves = TRUE, extra = 106) # tree plotting
+C1 # Only divides the model from VendorID 
+predict_CART1 <-predict(CART1, test2019, type = 'class')
+confmatrixCART1 <- table(test2019$binary, predict_CART1)
+confmatrixCART1 
+CART1_accuracy <- sum(diag(confmatrixCART1)) / sum(confmatrixCART1)
+CART1_accuracy # 0.7254168
+CART1_precision <- confmatrixCART1[4]/sum(confmatrixCART1[4],confmatrixCART1[2])
+CART1_precision # 0.8499493
+CART1_sensitivity <- confmatrixCART1 [4] / sum(confmatrixCART1 [4], confmatrixCART1[3])
+CART1_sensitivity # 0.6803415
+CART1_fscore <- (2 * (CART1_sensitivity * CART1_precision))/(CART1_sensitivity + CART1_precision)
+CART1_fscore # 0.7557463
+
+calculateMAE
+
+# THIS IS AN AMAZING MODEL WHEN APPLIED TO CART 
+
+
+# Use the 2019 trained data, and apply it to the 2020 data to assess for the impacts of COVID
+# CART1 <- rpart(binary ~ VendorID + passenger_count + trip_distance + total_amount + 
+               #  numeric_trip_time + time_of_day + dow + totamt_x_tripdist, data = train2019, method = 'class') 
+# C1 <- rpart.plot(CART1, fallen.leaves = TRUE, extra = 106) # tree plotting
+# C1 # Only divides the model from VendorID 
+predict_CART2 <-predict(CART1, merged2020, type = 'class')
+confmatrixCART2 <- table(merged2020$binary, predict_CART2)
+confmatrixCART2
+CART2_accuracy <- sum(diag(confmatrixCART2)) / sum(confmatrixCART2)
+CART2_accuracy # 0.6756459
+CART2_precision <- confmatrixCART2[4]/sum(confmatrixCART2[4],confmatrixCART2[2])
+CART2_precision # 0.7390731
+CART2_sensitivity <- confmatrixCART2[4] / sum(confmatrixCART2 [4], confmatrixCART2[3])
+CART2_sensitivity # 0.6577974
+CART2_fscore <- (2 * (CART2_sensitivity * CART2_precision))/(CART2_sensitivity + CART2_precision)
+CART2_fscore # 0.6960708
+
+# The 2019 CART model can predict on the 2020 model with 67.5% accuracy
+
+# 2020 model on 2020 model to see the way in which their data splits
+m2020 <- sort(sample(nrow(merged2020), nrow(merged2020)*0.8))
+train2020 <- merged2020[m2020,]
+test2020 <- merged2020[-m2020,]
+prop.table(table(train2020$binary)) # Represent the column figures as percentages of the total 
+prop.table(table(test2020$binary)) 
+CART3 <- rpart(binary ~ VendorID + passenger_count + trip_distance + total_amount + 
+                 numeric_trip_time + time_of_day + dow + totamt_x_tripdist, data = train2020, method = 'class') 
+C3 <- rpart.plot(CART3, fallen.leaves = TRUE, extra = 106) # tree plotting
+C3 # Only divides the model from VendorID - same for 2020 as for 2019! 
+
+
+# Compare models using ROC curves and AUC score
+# calculateMAE
+# Analyse the way in which the trees divide and what the figures at the bottom of the trees mean
+
+# HOW TO CHECK FOR NORMALITY
+# SUMMARY STATS, SUMMARY GRAPHS
+# BASIC AND GRAPHICAL ANALYSIS 
