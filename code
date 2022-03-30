@@ -710,7 +710,10 @@ yCART1_sensitivity <- confmatrix_yCART1[4] / sum(confmatrix_yCART1[4], confmatri
 yCART1_sensitivity # 0.919695
 yCART1_fscore <- (2 * (yCART1_sensitivity * yCART1_precision ))/(yCART1_sensitivity + yCART1_precision )
 yCART1_fscore # 0.1251097
-
+# Conclusion: when we ask the model to predict the binary variable based on the 85th percentile of the data, it does not split on
+# VendorID anymore. Rather, it begins to split on total_amount. The cost of this is a signficantly accuracy score = 53%. 
+# The bigger trade off is the fscore which is at a mere 12% indicating that the model that splits from VendorID and which predicts on the median
+# might be a better choice! Therefore, the validation of the CART model that splits from VendorID has been completed.
 # Compare models using ROC curves and AUC score
 
 # calculateMAE
