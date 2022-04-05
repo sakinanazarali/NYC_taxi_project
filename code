@@ -139,6 +139,11 @@ merged2020$tipdivtotal <- merged2020$tip_amount/merged2020$total_amount
 head(merged2019)
 head(merged2020)
 
+# Add a column that calculates tipdivtotal
+merged2019$tipdivtotal <- merged2019$tip_amount/merged2019$total_amount
+merged2020$tipdivtotal <- merged2020$tip_amount/merged2020$total_amount
+
+
 predata2019 <- merged2019
 predata2020 <- merged2020
 
@@ -191,8 +196,6 @@ merged2020 <- subset(merged2020, total_amount <= 200)
 merged2019 <- subset(merged2019, total_amount >= 0)
 merged2020 <- subset(merged2020, total_amount >= 0)
 
-merged2019$tipdivtotal <- merged2019$tip_amount/merged2019$total_amount
-merged2020$tipdivtotal <- merged2020$tip_amount/merged2020$total_amount
 
 # Plot the data to see how they look after cleaning - big difference!
 ggplot(merged2019, na.rm = TRUE, aes(x=tip_amount,y=tipdivtotal)) + geom_point() + geom_smooth(method=lm, se=FALSE, col='blue', size=1) + ggtitle("Tip/Total vs Total Tip Amount 2019 Data Points")
@@ -208,7 +211,8 @@ hist(merged2019$tipdivtotal,
      main="Tip as a Percentage of Total Fare Amounts 2019",
      xlab="TipDivTotal",
      col="darkmagenta",
-     freq=FALSE)
+     freq=FALSE,
+     breaks=10)
 
 hist(merged2020$tipdivtotal,
      main="Tip as a Percentage of Total Fare Amounts 2020",
@@ -254,12 +258,12 @@ median(merged2020$tipdivtotal) # 0.166348
 # between 09:00:01 and 16:00:00 = 3 Working Hours 
 # between 16:00:01 and 20:00:00 = 4 Evening Rush Hour
 # between 20:00:01 and 23:59:59 = 5 Night 
+library(chron)
 merged2019$PUdate <- as.Date(merged2019$tpep_pickup_datetime)
 class(merged2019$PUdate)
 merged2019$PUtime <- format(merged2019$tpep_pickup_datetime,format = "%H:%M:%S")
 merged2019$PUtime <- as.times(merged2019$PUtime)
 class(merged2019$PUtime)
-library(chron)
 breaks <- c('00:00:00', '05:00:00', '09:00:00', '16:00:00','20:00:00', '23:59:59')
 labels <- c(1,2,3,4,5)
 h1 <- chron(times=merged2019$PUtime)
@@ -387,9 +391,13 @@ hist(hightips_2020$VendorID, main = "VendorID for High Tip 2020 Trips", freq = F
 hist(lowtips_2020$VendorID, main = "VendorID for Low Tip 2020 Trips", freq = FALSE, col = "lightblue1", xlab = "VendorID")
 hist(hightips_2020$fare_amount, main = "Fare Amount for High Tip 2020 Trips", freq = FALSE, col =  "mediumorchid1", xlab =  "Fare Amount in $")
 hist(lowtips_2020$fare_amount, main = "Fare Amount for Low Tip 2020 Trips", freq = FALSE, col =  "navajowhite", xlab =  "Fare Amount in $")
+
 hist(hightips_2020$tipdivtotal, main = "Tip/Total for High 2020 Trips", freq = FALSE, col = "palevioletred1", xlab = "Fraction", xlim=c(0,0.4))
+
 hist(lowtips_2020$tipdivtotal, main = "Tip/Total for Low 2020 Trips", freq = FALSE, col = "seagreen2", xlab = "Fraction", xlim=c(0,0.4))
+
 hist(hightips_2020$numeric_trip_time, main ="Trip Time in Seconds for High 2020 Trips", freq = FALSE, col = "tan3", xlab = "Time in Seconds", xlim = c(0,10000))
+
 hist(lowtips_2020$numeric_trip_time, main ="Trip Time in Seconds for Low 2020 Trips", freq = FALSE, col = "yellow", xlab = "Time in Seconds", xlim = c(0,10000))
 
 head(hightips_2019)
@@ -399,7 +407,10 @@ par(mfrow=c(1,1))
 # 2) Question 1 - OLS - # What variables impact tipping behavior
 
 # AIC of using tip_amount as DV - justify why (AIC score when compared to AIC of using tip_amount of DV, controls for outliers and extremes)
-
+options(scipen = 5)
+modelKS <- lm(tipdivtotal~DOLocationID+PULocationID+VendorID+passenger_count + trip_distance + RatecodeID + payment_type + fare_amount + extra + tolls_amount + numeric_trip_time 
++ dow + time_of_day + totamt_x_tripdist, data=merged2019)
+summary(modelKS) # R2 = 0.07606
 model1 <- lm(tipdivtotal ~ DOLocationID + VendorID + passenger_count + trip_distance + RatecodeID + total_amount + numeric_trip_time + time_of_day + dow + totamt_x_tripdist, data = merged2019)
 summary(model1) # R2 = 0.05115 
 model2 <- lm(tipdivtotal ~ VendorID + passenger_count + trip_distance + total_amount + numeric_trip_time + time_of_day + dow + totamt_x_tripdist, data = merged2019)
@@ -411,6 +422,7 @@ summary(model4) # R2 = 0.03714
 model5 <- lm(tip_amount ~ DOLocationID + VendorID + passenger_count + trip_distance + RatecodeID + total_amount + numeric_trip_time + time_of_day + dow + totamt_x_tripdist, data = merged2019)
 summary(model5) # R2 = 0.7239
 
+AIC(modelKS) # -4502663
 AIC(model1) # -4464100
 AIC(model2) # -4445244
 AIC(model3) # -4443607
@@ -446,6 +458,9 @@ logitD <- glm(tipdivtotal ~ VendorID + passenger_count + trip_distance + total_a
 summary(logitD) 
 
 stargazer(logitA, logitB, logitC, logitD, type = "text")
+
+
+
 
 # Interesting development. Here, logitD which represents the variables from model4 in OLS seems to have the lowest AIC. Additionally, time_of_day and dow have
 # also lost some of their significance. Certainly however, is that VendorID, trip_distance, total_amount and the interaction variable, continue to show sustained significance. 
@@ -516,6 +531,7 @@ tips.pred = rep("0",dim(train2019)[1]) # Place a "0" (low) on all of the rows in
 tips.pred[tips.prob>.5] = "1" # if the predicted probability is greater than 0.5, then label it as "1" (high)
 cmLOGIT <- table(tips.pred,train2019$binary.factor)
 cmLOGIT
+
 
 # tips.pred      0      1
 #         0 579675 579752
@@ -593,6 +609,11 @@ CART1_sensitivity <- confmatrixCART1 [4] / sum(confmatrixCART1 [4], confmatrixCA
 CART1_sensitivity # 0.6784105
 CART1_fscore <- (2 * (CART1_sensitivity * CART1_precision))/(CART1_sensitivity + CART1_precision)
 CART1_fscore # 0.7542958
+
+sum(predict_CART1==1)
+sum(predict_CART1==0)
+sum(test2019$binary==1)
+sum(test2019$binary==0)
 
 # Train the dataset, again, on a different set of 80/20 data to check if the same split will occur. This is basically
 # K Fold Regression, done manually. 
@@ -713,6 +734,11 @@ CART2_fscore <- (2 * (CART2_sensitivity * CART2_precision))/(CART2_sensitivity +
 CART2_fscore # 0.6960708
 # The 2019 CART model can predict on the 2020 model with 67.5% accuracy
 
+sum(predict_CART2 == 1)
+sum(predict_CART2 == 0)
+sum(merged2020$binary==1)
+sum(merged2020$binary==0)
+
 # 2020 model on 2020 model to see the way in which their data splits
 m2020 <- sort(sample(nrow(merged2020), nrow(merged2020)*0.8))
 train2020 <- merged2020[m2020,]
@@ -727,9 +753,9 @@ C3 # Only divides the model from VendorID - same for 2020 as for 2019!
 # Out of curiosity, check if the data would be split at VendorID if we changed the definition of "high tip" 
 # to 85th percentile of the data
 median(merged2019$tipdivtotal) # 0.1665904
-quantile(merged2019$tipdivtotal,0.85) # 0.17
+quantile(merged2019$tipdivtotal,0.6) # 0.17
 # Create a new binary variable that is 1 if the tip is greater than the 85th percentile of tipdivtotal
-merged2019$binary2 <- ifelse(merged2019$tipdivtotal>0.17,1,0)
+merged2019$binary2 <- ifelse(merged2019$tipdivtotal>0.2,1,0)
 head(merged2019$binary2)
 str(merged2019$binary2)
 str(merged2019)
