@@ -21,7 +21,7 @@ A project that attempts to answer the following question: "What variables impact
 10) Validate CART models using a manual K-Fold Validation:
     - Test the 2019 model with a newly sampled 80/20 trained dataset 
     - Test the 2019 model with a newly sampled 70/30 trained dataset
-    - Test the 2019 model without the defining variable (VendorID) to assess how much impact is felt with its absence
+    - Test the 2019 model without the defining variable of high tip/low tip trips(VendorID) to assess how much impact is felt with its absence
     - Test the 2019 model whilst making the defining variable (VendorID) the dependent variable to assess how much of the variance in independent variables it can capture
 
 <img width="415" alt="Screenshot 2022-04-07 at 00 29 44" src="https://user-images.githubusercontent.com/98000420/162144461-af0e7ec2-74f0-4a77-abad-99f840fcc40e.png">
