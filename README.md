@@ -14,18 +14,19 @@ A project that attempts to answer the following question: "What variables impact
 3) Test the same models from OLS into LOGIT. Finest model in OLS is not the finest one in LOGIT (makes variable selection difficult). 
 4) Utilize stepwise regression to find the best model by feeding it with "kitchensink" variables. 
 5) Create a model on LOGIT that uses variables that were pruned with stepwise regression. 
-6) Use the 2019 trained LOGIT model to predict on the 2019 test dataset (80% trained data, 20% test data) - 49% accuracy
-7) Create a CART model that uses the 2019 trained model to predict on the 2019 test dataset (shows that **VendorID** splits the high tip trips from low tip trips) - 72% accuracy
+6) Use the 2019 trained LOGIT model to predict on the 2019 test dataset (80% trained data, 20% test data) - 49% accuracy - M4
+7) Create a CART model that uses the 2019 trained model to predict on the 2019 test dataset (shows that **VendorID** splits the high tip trips from low tip trips) - 72% accuracy - M1
 8) Create a CART model that uses the 2019 trained model to predict on the 2020 dataset. This is mainly to assess for the impact of COVID-19 on tipping behaviour - 67% accuracy
 9) Create a CART model that uses the 2020 trained model to predict on the 2020 test dataset. This is mainly to assess for the splits between the branches in the 2019 CART model vs that of the 2020 CART model.
 10) Validate CART models using a manual K-Fold Validation:
-    - Test the 2019 model with a newly sampled 80/20 trained dataset 
-    - Test the 2019 model with a newly sampled 70/30 trained dataset
+    - Test the 2019 model with a newly sampled 80/20 trained dataset - M2
+    - Test the 2019 model with a newly sampled 70/30 trained dataset - M3
     - Test the 2019 model without the defining variable of high tip/low tip trips (VendorID) to assess how much impact is felt with its absence
-    - Test the 2019 model whilst making the defining variable (VendorID) the dependent variable to assess how much of the variance in independent variables it can capture
+    - Test the 2019 model whilst making the defining variable (VendorID) the dependent variable to assess how much of the variance in independent variables it can capture - M5
 
 <img width="415" alt="Screenshot 2022-04-07 at 00 29 44" src="https://user-images.githubusercontent.com/98000420/162144461-af0e7ec2-74f0-4a77-abad-99f840fcc40e.png">
-<img width="563" alt="Screenshot 2022-04-07 at 00 29 52" src="https://user-images.githubusercontent.com/98000420/162144481-9e18c258-a80d-4cc8-8b32-0c0baf685f0c.png">
+<img width="1061" alt="Screenshot 2022-04-07 at 01 16 34" src="https://user-images.githubusercontent.com/98000420/162153223-7589951e-6485-44f4-9b9f-42937bd338d5.png">
+
 
 **Findings:**
 
