@@ -18,7 +18,7 @@ A project that attempts to answer the following question: "What variables impact
 7) Create a CART model that uses the 2019 trained model to predict on the 2019 test dataset. - 72% accuracy
 8) Create a CART model that uses the 2019 trained model to predict on the 2020 dataset. This is mainly to assess for the impact of COVID-19 on tipping behaviour - 67% accuracy
 9) Create a CART model that uses the 2020 trained model to predict on the 2020 test dataset. This is mainly to assess for the splits between the branches in the 2019 CART model vs that of the 2020 CART model.
-10) Validate CART models using a manual K-Fold Regression:
+10) Validate CART models using a manual K-Fold Validation:
     - Test the 2019 model with a newly sampled 80/20 trained dataset 
     - Test the 2019 model with a newly sampled 70/30 trained dataset
     - Test the 2019 model without the defining variable (VendorID) to assess how much impact is felt with its absence
