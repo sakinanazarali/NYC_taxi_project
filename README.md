@@ -1,6 +1,6 @@
 A project that attempts to answer the following question: "What variables impact tipping behaviour in NYC Taxi Trips, and, how was it changed since COVID-19?" 
 
-**Initial Hypotheses: **
+**Initial Hypotheses:**
 
 1) Drop offs or pick ups to/from posh areas of NYC would have higher tips amounts
 2) COVID-19 would negatively impact tip amounts
@@ -27,7 +27,7 @@ A project that attempts to answer the following question: "What variables impact
 <img width="415" alt="Screenshot 2022-04-07 at 00 29 44" src="https://user-images.githubusercontent.com/98000420/162144461-af0e7ec2-74f0-4a77-abad-99f840fcc40e.png">
 <img width="563" alt="Screenshot 2022-04-07 at 00 29 52" src="https://user-images.githubusercontent.com/98000420/162144481-9e18c258-a80d-4cc8-8b32-0c0baf685f0c.png">
 
-**Findings: **
+**Findings:**
 
 1) VendorID: the most differentiating variable for high tip/low trip tips
 2) Taxi drivers earn higher tips between 8PM and 12AM
